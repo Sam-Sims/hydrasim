@@ -5,7 +5,7 @@ nextflow.enable.dsl=2
 process subset_reference_accessions {
     label "process_low"
 
-    container 'biocontainers/python:3.10.4'
+    container 'python:3.10.13-bookworm'
 
     input:
     path reference_csv
@@ -23,7 +23,7 @@ process subset_reference_accessions {
 process subset_dataset_accessions {
     label "process_low"
 
-    container 'biocontainers/python:3.10.4'
+    container 'python:3.10.13-bookworm'
 
     input:
     path dataset_csv
@@ -41,7 +41,7 @@ process subset_dataset_accessions {
 process download_reference_fasta {
     label "process_low"
 
-    container "community.wave.seqera.io/library/ncbi-datasets-cli_unzip:ec913708564558ae"
+    container "staphb/ncbi-datasets:16.30.0"
 
     input:
     tuple val(accession), val(category)    
@@ -63,7 +63,7 @@ process download_reference_fasta {
 
 process download_dataset_accession {
 
-    container "biocontainers/sra-tools:2.7.0--0"
+    container "quay.io/biocontainers/sra-tools:3.1.1--h4304569_0"
 
     storeDir "${params.dataset_dir}/"
     input:
@@ -82,7 +82,7 @@ process download_dataset_accession {
 process download_dataset_accession_paired {
     label "process_low"
     
-    container "biocontainers/sra-tools:2.7.0--0"
+    container "quay.io/biocontainers/sra-tools:3.1.1--h4304569_0"
 
     storeDir "${params.dataset_dir}/"
     input:

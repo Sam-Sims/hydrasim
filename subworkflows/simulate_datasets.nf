@@ -4,7 +4,7 @@ import java.nio.file.Paths
 
 process downsample_dataset {
 
-    container 'biocontainers/rasusa:2.0.0--h715e4b3_2'
+    container 'quay.io/biocontainers/rasusa:2.1.0--h715e4b3_0'
 
     input:
     tuple val(index), val(ref_accession), val(ref_category), path(ref_fasta), val(ref_coverage), val(dataset_accession), val(platform), path(dataset_fastq)
@@ -21,7 +21,7 @@ process downsample_dataset {
 
 process downsample_dataset_paired {
 
-    container 'biocontainers/rasusa:2.0.0--h715e4b3_2'
+    container 'quay.io/biocontainers/rasusa:2.1.0--h715e4b3_0'
 
     input:
     tuple val(index), val(ref_accession), val(ref_category), path(ref_fasta), val(ref_coverage), val(dataset_accession), val(platform), path(dataset_fastq1), path(dataset_fastq2)
@@ -38,7 +38,7 @@ process downsample_dataset_paired {
 
 process simulate_reads {
 
-    container 'biocontainers/badread:0.4.1--pyhdfd78af_0'
+    container 'quay.io/biocontainers/badread:0.4.1--pyhdfd78af_0'
 
     input:
     tuple val(index), val(ref_accession), val(ref_category), path(ref_fasta), val(ref_coverage), val(dataset_accession), val(platform), path(dataset_fastq)
@@ -60,7 +60,7 @@ process simulate_reads {
 
 process simulate_reads_paired {
 
-    container 'community.wave.seqera.io/library/wgsim_bc:a72326165be9e21a'
+    container 'quay.io/biocontainers/wgsim:1.0--ha92aebf_2'
 
     input:
     tuple val(index), val(ref_accession), val(ref_category), path(ref_fasta), val(ref_coverage), val(dataset_accession), val(platform), path(dataset_fastq1), path(dataset_fastq2)
@@ -85,7 +85,7 @@ process simulate_reads_paired {
 
 process combine_for_recipe {
 
-    container 'biocontainers/wgsim:1.0--0'
+    container 'quay.io/biocontainers/wgsim:1.0--ha92aebf_2'
 
 
     publishDir "${params.output_dir}/${ref_category}", mode: "copy"
@@ -105,7 +105,7 @@ process combine_for_recipe {
 
 process combine_for_recipe_paired {
 
-    container 'biocontainers/wgsim:1.0--0'
+    container 'quay.io/biocontainers/wgsim:1.0--ha92aebf_2'
 
 
     publishDir "${params.output_dir}/${ref_category}", mode: "copy"
