@@ -60,7 +60,7 @@ process simulate_reads {
 
 process simulate_reads_paired {
 
-    container 'quay.io/biocontainers/wgsim:1.0--ha92aebf_2'
+    container 'community.wave.seqera.io/library/wgsim_bc:7ed358cfbb01b031'
 
     input:
     tuple val(index), val(ref_accession), val(ref_category), path(ref_fasta), val(ref_coverage), val(dataset_accession), val(platform), path(dataset_fastq1), path(dataset_fastq2)
@@ -85,7 +85,7 @@ process simulate_reads_paired {
 
 process combine_for_recipe {
 
-    container 'quay.io/biocontainers/wgsim:1.0--ha92aebf_2'
+    container 'community.wave.seqera.io/library/wgsim_bc:7ed358cfbb01b031'
 
 
     publishDir "${params.output_dir}/${ref_category}", mode: "copy"
@@ -105,7 +105,7 @@ process combine_for_recipe {
 
 process combine_for_recipe_paired {
 
-    container 'quay.io/biocontainers/wgsim:1.0--ha92aebf_2'
+    container 'community.wave.seqera.io/library/wgsim_bc:7ed358cfbb01b031'
 
 
     publishDir "${params.output_dir}/${ref_category}", mode: "copy"
