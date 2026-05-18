@@ -2,7 +2,7 @@ process BADREAD_SIMULATE {
     tag "$meta.id"
     label 'process_low'
 
-    container 'biocontainers/badread:0.4.1--pyhdfd78af_0'
+    container 'community.wave.seqera.io/library/badread:0.4.2--681703784fcb5155'
 
     input:
     tuple val(meta), path(fasta), val(coverage)

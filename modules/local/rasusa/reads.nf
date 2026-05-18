@@ -2,7 +2,7 @@ process RASUSA_READS {
     tag "$meta.id"
     label 'process_low'
 
-    container 'biocontainers/rasusa:2.0.0--h715e4b3_2'
+    container 'community.wave.seqera.io/library/rasusa:4.1.0--ea51c4058561e458'
 
     input:
     tuple val(meta), path(reads)

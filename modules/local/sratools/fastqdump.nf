@@ -2,7 +2,7 @@ process FASTQ_DUMP {
     tag "$meta.id"
     label 'process_low'
 
-    container 'biocontainers/sra-tools:2.7.0--0'
+    container 'community.wave.seqera.io/library/sra-tools:3.4.1--191c884ef112e97b'
 
 
     input:
