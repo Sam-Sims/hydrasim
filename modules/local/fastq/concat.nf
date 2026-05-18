@@ -2,6 +2,8 @@ process FASTQ_CONCAT {
     tag "$meta.id"
     label 'process_single'
 
+    container 'ubuntu:24.04'
+
     input:
     tuple val(meta), path(spike_reads), path(base_reads)
 
