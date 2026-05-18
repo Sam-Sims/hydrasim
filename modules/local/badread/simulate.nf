@@ -5,8 +5,7 @@ process BADREAD_SIMULATE {
     container 'biocontainers/badread:0.4.1--pyhdfd78af_0'
 
     input:
-    tuple val(meta), path(fasta)
-    val coverage
+    tuple val(meta), path(fasta), val(coverage)
 
     output:
     tuple val(meta), path("*.fq.gz"), emit: reads

@@ -5,8 +5,7 @@ process WGSIM_WGSIM {
     container 'community.wave.seqera.io/library/wgsim_bc:a72326165be9e21a'
 
     input:
-    tuple val(meta), path(fasta)
-    val coverage
+    tuple val(meta), path(fasta), val(coverage)
     val read_length1
     val read_length2
 
