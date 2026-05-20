@@ -160,18 +160,18 @@
           "description": "Badread quality score model to use."
         },
         "badread_junk_reads": {
-          "type": "string",
-          "default": "1",
+          "type": "number",
+          "default": 1,
           "description": "Percentage of junk reads in Badread output."
         },
         "badread_random_reads": {
-          "type": "string",
-          "default": "1",
+          "type": "number",
+          "default": 1,
           "description": "Percentage of random reads in Badread output."
         },
         "badread_chimeras": {
-          "type": "string",
-          "default": "1",
+          "type": "number",
+          "default": 1,
           "description": "Percentage of chimeric reads in Badread output."
         },
         "badread_glitches": {
