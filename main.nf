@@ -1,31 +1,22 @@
 #!/usr/bin/env nextflow
-// nextflow.enable.dsl=2
 
-include { generate_recipes } from './subworkflows/generate_recipes'
-include { simulate_datasets } from './subworkflows/simulate_datasets'
-
-process checkPath {    
-    script:
-    """
-    echo "Current PATH: \$PATH" >temp.txt
-    """
-}
-
+include { validateParameters } from 'plugin/nf-schema'
+include { HYDRASIM } from './workflows/hydrasim'
 
 workflow {
-    // Check input files
-    if (params.reference_csv) {
-        reference_csv = file(params.reference_csv, type: "file", checkIfExists:true)
-    } else {
-        exit 1, "Reference CSV be provided -- aborting"
-    }
-    if (params.dataset_csv) {
-        dataset_csv = file(params.dataset_csv, type: "file", checkIfExists:true)
-    } else {
-        exit 1, "Dataset CSV be provided -- aborting"
-    }
+    validateParameters()
 
-    generate_recipes(reference_csv, dataset_csv)
-    simulate_datasets(generate_recipes.out.paired, generate_recipes.out.unpaired)
-
+    HYDRASIM(
+        file(params.reference_csv, type: 'file'),
+        file(params.dataset_csv, type: 'file'),
+        channel.fromList(params.coverages),
+        params.downsample_background,
+        params.dataset_coverage,
+        params.badread_per_segment,
+        params.badread_length,
+        params.badread_low_coverage_cutoff,
+        params.badread_low_coverage_length,
+        params.wgsim_length_read1,
+        params.wgsim_length_read2
+    )
 }
