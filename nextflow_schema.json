@@ -218,6 +218,11 @@
           "default": false,
           "description": "Generate a metadata CSV for DB ingestion at the end of the pipeline."
         },
+        "metadata_study_id": {
+          "type": "string",
+          "default": "hydrasim",
+          "description": "Study ID to record in the metadata CSV."
+        },
         "metadata_sample_source": {
           "type": "string",
           "default": "other",

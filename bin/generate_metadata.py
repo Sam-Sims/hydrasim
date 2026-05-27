@@ -8,7 +8,7 @@ from datetime import date
 from pathlib import Path
 
 COLUMNS = [
-    'run_index', 'biosample_id', 'r1', 'spiked_ids',
+    'run_index', 'study_id', 'biosample_id', 'r1', 'spiked_ids',
     'source_climb_id', 'applications', 'methods',
     'input_type', 'specimen_type_details', 'sample_source',
     'sample_type', 'spike_in', 'batch_id', 'sequence_purpose',
@@ -43,6 +43,7 @@ def main() -> None:
     parser.add_argument('--wgsim-mutation-rate', required=True)
     parser.add_argument('--wgsim-indel-fraction', required=True)
 
+    parser.add_argument('--study-id', required=True)
     parser.add_argument('--sample-source', required=True)
     parser.add_argument('--sample-type', required=True)
     parser.add_argument('--governance-status', required=True)
@@ -116,6 +117,7 @@ def main() -> None:
 
         writer.writerow({
             'run_index': run_index,
+            'study_id': args.study_id,
             'biosample_id': f'{record["dataset_id"]}-{strategy}',
             'r1': record['reads'],
             'spiked_ids': f'[{taxon_id}]' if taxon_id else '[]',
