@@ -15,3 +15,4 @@ Fork changes a few things:
 - Outputs simulated reads only as a seperate output as well as full dataset
 - Adds an option to run badread with smaller lengths below a defined "low coverage" thereshold
   - This is useful for small segmented genomes where reads would otherwise span the entire length of the segment and you only want partial coverage
+- Automatic metadata generation ready for upload straight to synthscape
