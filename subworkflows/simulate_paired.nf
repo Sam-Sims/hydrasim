@@ -1,6 +1,7 @@
 include { RASUSA_READS                                     } from '../modules/rasusa/reads'
 include { WGSIM_WGSIM                                      } from '../modules/wgsim/wgsim'
 include { FASTQ_CONCAT as FASTQ_CONCAT_BACKGROUND          } from '../modules/fastq/concat'
+include { METADATA_RECORD                                  } from '../modules/metadata/record'
 include { SEQKIT_STATS                                     } from '../modules/seqkit/stats'
 
 workflow SIMULATE_PAIRED {
@@ -51,7 +52,10 @@ workflow SIMULATE_PAIRED {
         .groupTuple()
         .set { ch_reads }
 
+    METADATA_RECORD(ch_reads)
+
     emit:
     reads           = ch_reads
+    metadata        = METADATA_RECORD.out.metadata
     simulated_stats = SEQKIT_STATS.out.tsv
 }

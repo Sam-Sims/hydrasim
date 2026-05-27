@@ -1,8 +1,9 @@
-include { NCBI_DATASETS_DOWNLOAD_GENOME } from '../modules/datasets/download'
-include { SRACHA_GET                  } from '../modules/sracha/sracha'
-include { SIMULATE_UNPAIRED          } from '../subworkflows/simulate_unpaired'
-include { SIMULATE_PAIRED            } from '../subworkflows/simulate_paired'
-include { SUMMARISE_SEQKIT           } from '../modules/summary/summarise_seqkit'
+include { NCBI_DATASETS_DOWNLOAD_GENOME            } from '../modules/datasets/download'
+include { SRACHA_GET                               } from '../modules/sracha/sracha'
+include { SIMULATE_UNPAIRED                        } from '../subworkflows/simulate_unpaired'
+include { SIMULATE_PAIRED                          } from '../subworkflows/simulate_paired'
+include { SUMMARISE_SEQKIT                         } from '../modules/summary/summarise_seqkit'
+include { GENERATE_METADATA                        } from '../modules/metadata/generate'
 
 workflow HYDRASIM {
     take:
@@ -28,8 +29,10 @@ workflow HYDRASIM {
             def id        = "${row.id}".trim()
             def accession = row.accession ? "${row.accession}".trim() : ''
             def fasta     = row.path ? file("${row.path}".trim(), checkIfExists: true) : []
+            def taxon_id  = row.taxon_id ? "${row.taxon_id}".trim() : ''
             def meta      = [
-                id: id
+                id       : id,
+                taxon_id : taxon_id ? taxon_id as Long : null
             ]
             tuple(meta, accession, fasta)
         }
@@ -84,10 +87,12 @@ workflow HYDRASIM {
         .combine(ch_datasets)
         .map { ref_meta, ref_fasta, coverage, dataset_meta, reads ->
             def meta      = [
-                id        : dataset_meta.id,
-                ref_id    : ref_meta.id,
-                single_end: dataset_meta.single_end,
-                coverage  : coverage
+                id            : dataset_meta.id,
+                ref_id        : ref_meta.id,
+                single_end    : dataset_meta.single_end,
+                coverage      : coverage,
+                badread_length: null,
+                ref_taxon_id  : ref_meta.taxon_id
             ]
 
             tuple(meta, ref_fasta, coverage, reads)
@@ -142,6 +147,19 @@ workflow HYDRASIM {
         .set { ch_simulated_stats_files }
 
     SUMMARISE_SEQKIT(ch_simulated_stats_files)
+
+    if (params.generate_metadata) {
+        SIMULATE_UNPAIRED.out.metadata
+            .mix(SIMULATE_PAIRED.out.metadata)
+            .map { _meta, metadata -> metadata }
+            .collect()
+            .set { ch_metadata_records }
+
+        GENERATE_METADATA(
+            ch_metadata_records,
+            workflow.manifest.version
+        )
+    }
 
     emit:
     paired          = SIMULATE_PAIRED.out.reads

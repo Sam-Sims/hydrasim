@@ -2,6 +2,7 @@ include { RASUSA_READS                                     } from '../modules/ra
 include { SIMULATE_BADREAD_WHOLE_REFERENCE                } from './simulate_badread_whole_reference'
 include { SIMULATE_BADREAD_PER_SEGMENT                    } from './simulate_badread_per_segment'
 include { FASTQ_CONCAT as FASTQ_CONCAT_BACKGROUND         } from '../modules/fastq/concat'
+include { METADATA_RECORD                                 } from '../modules/metadata/record'
 include { SEQKIT_STATS                                    } from '../modules/seqkit/stats'
 
 workflow SIMULATE_UNPAIRED {
@@ -44,7 +45,10 @@ workflow SIMULATE_UNPAIRED {
 
     FASTQ_CONCAT_BACKGROUND(ch_concat_reads)
 
+    METADATA_RECORD(FASTQ_CONCAT_BACKGROUND.out.reads)
+
     emit:
     reads           = FASTQ_CONCAT_BACKGROUND.out.reads
+    metadata        = METADATA_RECORD.out.metadata
     simulated_stats = SEQKIT_STATS.out.tsv
 }

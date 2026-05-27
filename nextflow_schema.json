@@ -21,7 +21,7 @@
           "pattern": "^\\S+\\.csv$",
           "schema": "assets/schema_reference.json",
           "description": "Path to reference organisms CSV samplesheet.",
-          "help_text": "A CSV file listing reference genomes to spike into background datasets. Must contain 'id', 'accession', and 'path' columns. Provide exactly one of 'accession' or 'path' for each reference row."
+          "help_text": "A CSV file listing reference genomes to spike into background datasets. Must contain 'id', 'accession', and 'path' columns, and may include optional integer 'taxon_id'. Provide exactly one of 'accession' or 'path' for each reference row."
         },
         "dataset_csv": {
           "type": "string",
@@ -207,6 +207,48 @@
           "description": "Fraction of mutations that are indels in wgsim."
         }
       }
+    },
+    "metadata_options": {
+      "title": "Metadata options",
+      "type": "object",
+      "description": "Parameters for optional DB-ingest metadata CSV generation.",
+      "properties": {
+        "generate_metadata": {
+          "type": "boolean",
+          "default": false,
+          "description": "Generate a metadata CSV for DB ingestion at the end of the pipeline."
+        },
+        "metadata_sample_source": {
+          "type": "string",
+          "default": "other",
+          "description": "Sample source to record in the metadata CSV (e.g. upper_respiratory)."
+        },
+        "metadata_sample_type": {
+          "type": "string",
+          "default": "other",
+          "description": "Sample type to record in the metadata CSV."
+        },
+        "metadata_governance_status": {
+          "type": "string",
+          "default": "no_consent_for_research",
+          "description": "Governance status to record in the metadata CSV."
+        },
+        "metadata_input_type": {
+          "type": "string",
+          "default": "validation_material",
+          "description": "Input type to record in the metadata CSV."
+        },
+        "metadata_spike_in": {
+          "type": "string",
+          "default": "none",
+          "description": "Spike-in value to record in the metadata CSV."
+        },
+        "metadata_received_date": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Received date (ISO format). Defaults to the date the pipeline was run."
+        }
+      }
     }
   },
   "allOf": [
@@ -224,6 +266,9 @@
     },
     {
       "$ref": "#/$defs/wgsim_options"
+    },
+    {
+      "$ref": "#/$defs/metadata_options"
     }
   ]
 }
