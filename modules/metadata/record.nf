@@ -5,7 +5,7 @@ process METADATA_RECORD {
     container 'ubuntu:24.04'
 
     input:
-    tuple val(meta), path(reads)
+    tuple val(meta), path(reads), path(seqkit_stats)
 
     output:
     tuple val(meta), path('*.metadata.json'), emit: metadata
@@ -22,6 +22,7 @@ process METADATA_RECORD {
     """
     read_files=( ${reads} )
     r1=\$(basename "\${read_files[0]}")
+    simulated_reads=\$(awk -F '\t' 'NR > 1 { total += \$4 } END { print total + 0 }' ${seqkit_stats})
 
     cat > "${prefix}.metadata.json" <<EOF
     {
@@ -31,7 +32,8 @@ process METADATA_RECORD {
       "coverage": "${meta.coverage}",
       "badread_length": ${badread_length},
       "ref_taxon_id": ${ref_taxon_id},
-      "reads": "${reads_dir}/\${r1}"
+      "reads": "${reads_dir}/\${r1}",
+      "simulated_reads": \${simulated_reads}
     }
     EOF
     """

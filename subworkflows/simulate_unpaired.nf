@@ -45,7 +45,11 @@ workflow SIMULATE_UNPAIRED {
 
     FASTQ_CONCAT_BACKGROUND(ch_concat_reads)
 
-    METADATA_RECORD(FASTQ_CONCAT_BACKGROUND.out.reads)
+    FASTQ_CONCAT_BACKGROUND.out.reads
+        .join(SEQKIT_STATS.out.tsv)
+        .set { ch_metadata_record_inputs }
+
+    METADATA_RECORD(ch_metadata_record_inputs)
 
     emit:
     reads           = FASTQ_CONCAT_BACKGROUND.out.reads

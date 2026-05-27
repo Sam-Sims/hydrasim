@@ -94,6 +94,7 @@ def main() -> None:
                 'badread_glitches': args.badread_glitches,
                 'downsample_background': args.downsample_background,
                 'dataset_coverage': args.dataset_coverage,
+                'simulated_reads': record['simulated_reads'],
             }
         else:
             strategy = 'wgsim'
@@ -110,6 +111,7 @@ def main() -> None:
                 'wgsim_indel_fraction': args.wgsim_indel_fraction,
                 'downsample_background': args.downsample_background,
                 'dataset_coverage': args.dataset_coverage,
+                'simulated_reads': record['simulated_reads'],
             }
 
         run_id = str(uuid.uuid4())

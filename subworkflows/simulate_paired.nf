@@ -52,7 +52,11 @@ workflow SIMULATE_PAIRED {
         .groupTuple()
         .set { ch_reads }
 
-    METADATA_RECORD(ch_reads)
+    ch_reads
+        .join(SEQKIT_STATS.out.tsv)
+        .set { ch_metadata_record_inputs }
+
+    METADATA_RECORD(ch_metadata_record_inputs)
 
     emit:
     reads           = ch_reads
