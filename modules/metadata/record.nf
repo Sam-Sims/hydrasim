@@ -15,6 +15,7 @@ process METADATA_RECORD {
 
     script:
     def prefix         = task.ext.prefix ?: "${meta.id}"
+    def reads_dir      = task.ext.reads_dir ?: '.'
     def badread_length = meta.badread_length != null ? "\"${meta.badread_length}\"" : 'null'
     def ref_taxon_id   = meta.ref_taxon_id != null ? meta.ref_taxon_id : 'null'
 
@@ -30,7 +31,7 @@ process METADATA_RECORD {
       "coverage": "${meta.coverage}",
       "badread_length": ${badread_length},
       "ref_taxon_id": ${ref_taxon_id},
-      "reads": "\${r1}"
+      "reads": "${reads_dir}/\${r1}"
     }
     EOF
     """
