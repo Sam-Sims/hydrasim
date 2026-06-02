@@ -2,7 +2,7 @@ process METADATA_RECORD {
     tag "$meta.id"
     label 'process_single'
 
-    container 'ubuntu:24.04'
+    container 'community.wave.seqera.io/library/python:3.12.13--27a817c2c0890658'
 
     input:
     tuple val(meta), path(reads), path(seqkit_stats)
@@ -22,7 +22,9 @@ process METADATA_RECORD {
     """
     read_files=( ${reads} )
     r1=\$(basename "\${read_files[0]}")
-    simulated_reads=\$(awk -F '\t' 'NR > 1 { total += \$4 } END { print total + 0 }' ${seqkit_stats})
+    read_stats=\$(extract_seqkit_metrics.py ${seqkit_stats})
+    simulated_reads=\$(echo "\${read_stats}" | cut -f 1)
+    simulated_avg_qual=\$(echo "\${read_stats}" | cut -f 2)
 
     cat > "${prefix}.metadata.json" <<EOF
     {
@@ -33,7 +35,8 @@ process METADATA_RECORD {
       "badread_length": ${badread_length},
       "ref_taxon_id": ${ref_taxon_id},
       "reads": "${reads_dir}/\${r1}",
-      "simulated_reads": \${simulated_reads}
+      "simulated_reads": \${simulated_reads},
+      "simulated_avg_qual": \${simulated_avg_qual}
     }
     EOF
     """

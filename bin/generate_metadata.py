@@ -81,6 +81,7 @@ def main() -> None:
                 'hydrasim_strategy': strategy,
                 'hydrasim_version': args.hydrasim_version,
                 'coverage': f'{str(float(record["coverage"])).rstrip("0").rstrip(".")}x',
+                'reference_id': record['ref_id'],
                 'input_accession': record['dataset_id'],
                 'simulator': simulator,
                 'badread_per_segment': args.badread_per_segment,
@@ -95,6 +96,7 @@ def main() -> None:
                 'downsample_background': args.downsample_background,
                 'dataset_coverage': args.dataset_coverage,
                 'simulated_reads': record['simulated_reads'],
+                'simulated_avg_qual': record['simulated_avg_qual'],
             }
         else:
             strategy = 'wgsim'
@@ -103,6 +105,7 @@ def main() -> None:
                 'hydrasim_strategy': strategy,
                 'hydrasim_version': args.hydrasim_version,
                 'coverage': f'{str(float(record["coverage"])).rstrip("0").rstrip(".")}x',
+                'reference_id': record['ref_id'],
                 'input_accession': record['dataset_id'],
                 'simulator': simulator,
                 'wgsim_length_read1': args.wgsim_length_read1,
@@ -112,6 +115,7 @@ def main() -> None:
                 'downsample_background': args.downsample_background,
                 'dataset_coverage': args.dataset_coverage,
                 'simulated_reads': record['simulated_reads'],
+                'simulated_avg_qual': record['simulated_avg_qual'],
             }
 
         run_id = str(uuid.uuid4())

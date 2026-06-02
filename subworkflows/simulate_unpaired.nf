@@ -4,12 +4,14 @@ include { SIMULATE_BADREAD_PER_SEGMENT                    } from './simulate_bad
 include { FASTQ_CONCAT as FASTQ_CONCAT_BACKGROUND         } from '../modules/fastq/concat'
 include { METADATA_RECORD                                 } from '../modules/metadata/record'
 include { SEQKIT_STATS                                    } from '../modules/seqkit/stats'
+include { FASTQ_TAG_READ_IDS                             } from '../modules/fastq/tag_read_ids'
 
 workflow SIMULATE_UNPAIRED {
     take:
     ch_recipes
     val_downsample_background
     val_dataset_coverage
+    val_tag_simulated_read_ids
     val_badread_per_segment
 
     main:
@@ -36,9 +38,23 @@ workflow SIMULATE_UNPAIRED {
         ch_spike_reads = SIMULATE_BADREAD_WHOLE_REFERENCE.out.reads
     }
 
-    SEQKIT_STATS(ch_spike_reads)
+    if (val_tag_simulated_read_ids) {
+        ch_spike_reads
+            .map { meta, reads -> tuple(meta, reads, '') }
+            .set { ch_tag_read_inputs }
 
-    ch_spike_reads
+        FASTQ_TAG_READ_IDS(ch_tag_read_inputs, '_badread')
+
+        FASTQ_TAG_READ_IDS.out.reads
+            .map { meta, reads, _suffix -> tuple(meta, reads) }
+            .set { ch_simulated_reads }
+    } else {
+        ch_simulated_reads = ch_spike_reads
+    }
+
+    SEQKIT_STATS(ch_simulated_reads)
+
+    ch_simulated_reads
         .join(ch_background_reads)
         .map { meta, spike_reads, base_reads -> tuple(meta, [spike_reads, base_reads], '') }
         .set { ch_concat_reads }

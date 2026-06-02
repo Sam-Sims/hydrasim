@@ -12,6 +12,7 @@ workflow {
         channel.fromList(params.coverages),
         params.downsample_background,
         params.dataset_coverage,
+        params.tag_simulated_read_ids,
         params.badread_per_segment,
         params.badread_length,
         params.badread_low_coverage_cutoff,

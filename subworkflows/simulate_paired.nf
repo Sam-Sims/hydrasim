@@ -3,12 +3,14 @@ include { WGSIM_WGSIM                                      } from '../modules/wg
 include { FASTQ_CONCAT as FASTQ_CONCAT_BACKGROUND          } from '../modules/fastq/concat'
 include { METADATA_RECORD                                  } from '../modules/metadata/record'
 include { SEQKIT_STATS                                     } from '../modules/seqkit/stats'
+include { FASTQ_TAG_READ_IDS                             } from '../modules/fastq/tag_read_ids'
 
 workflow SIMULATE_PAIRED {
     take:
     ch_recipes
     val_downsample_background
     val_dataset_coverage
+    val_tag_simulated_read_ids
     val_wgsim_length_read1
     val_wgsim_length_read2
 
@@ -32,9 +34,41 @@ workflow SIMULATE_PAIRED {
 
     WGSIM_WGSIM.out.reads
         .map { meta, reads1, reads2 -> tuple(meta, [reads1, reads2]) }
-        .set { ch_simulated_reads }
+        .set { ch_raw_simulated_reads }
+
+    if (val_tag_simulated_read_ids) {
+        ch_raw_simulated_reads
+            .flatMap { meta, reads ->
+                [
+                    tuple(meta, reads[0], '_R1'),
+                    tuple(meta, reads[1], '_R2')
+                ]
+            }
+            .set { ch_tag_read_inputs }
+
+        FASTQ_TAG_READ_IDS(ch_tag_read_inputs, '_wgsim')
+
+        FASTQ_TAG_READ_IDS.out.reads
+            .branch { meta, reads, suffix ->
+                r1: suffix == '_R1'
+                    return tuple(meta, reads)
+                r2: suffix == '_R2'
+                    return tuple(meta, reads)
+            }
+            .set { tagged_simulated_reads }
+
+        tagged_simulated_reads.r1
+            .join(tagged_simulated_reads.r2)
+            .map { meta, reads1, reads2 -> tuple(meta, [reads1, reads2]) }
+            .set { ch_tagged_simulated_reads }
+
+        ch_simulated_reads = ch_tagged_simulated_reads
+    } else {
+        ch_simulated_reads = ch_raw_simulated_reads
+    }
 
     SEQKIT_STATS(ch_simulated_reads)
+
 
     ch_simulated_reads
         .join(ch_background_reads)

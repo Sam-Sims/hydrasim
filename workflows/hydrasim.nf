@@ -12,6 +12,7 @@ workflow HYDRASIM {
     ch_coverages
     val_downsample_background
     val_dataset_coverage
+    val_tag_simulated_read_ids
     val_badread_per_segment
     val_badread_length
     val_badread_low_coverage_cutoff
@@ -126,6 +127,7 @@ workflow HYDRASIM {
         ch_unpaired_recipes,
         val_downsample_background,
         val_dataset_coverage,
+        val_tag_simulated_read_ids,
         val_badread_per_segment
     )
 
@@ -133,6 +135,7 @@ workflow HYDRASIM {
         recipes.paired,
         val_downsample_background,
         val_dataset_coverage,
+        val_tag_simulated_read_ids,
         val_wgsim_length_read1,
         val_wgsim_length_read2
     )
@@ -140,6 +143,7 @@ workflow HYDRASIM {
     SIMULATE_PAIRED.out.simulated_stats
         .mix(SIMULATE_UNPAIRED.out.simulated_stats)
         .set { ch_simulated_stats }
+
 
     ch_simulated_stats
         .map { _meta, stats -> stats }
