@@ -184,6 +184,14 @@
           "type": "string",
           "default": "10000,25,25",
           "description": "Glitch parameters for Badread (size,skip,adapter)."
+        },
+        "badread_seed": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "default": null,
+          "description": "Random number generator seed for deterministic Badread output."
         }
       }
     },

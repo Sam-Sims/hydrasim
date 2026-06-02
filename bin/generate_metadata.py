@@ -33,6 +33,7 @@ def main() -> None:
     parser.add_argument('--badread-random-reads', type=int, required=True)
     parser.add_argument('--badread-chimeras', type=int, required=True)
     parser.add_argument('--badread-glitches', required=True)
+    parser.add_argument('--badread-seed')
     parser.add_argument('--badread-low-coverage-length')
 
     parser.add_argument('--downsample-background', action=argparse.BooleanOptionalAction, required=True)
@@ -93,6 +94,7 @@ def main() -> None:
                 'badread_random_reads': args.badread_random_reads,
                 'badread_chimeras': args.badread_chimeras,
                 'badread_glitches': args.badread_glitches,
+                'badread_seed': args.badread_seed,
                 'downsample_background': args.downsample_background,
                 'dataset_coverage': args.dataset_coverage,
                 'simulated_reads': record['simulated_reads'],
