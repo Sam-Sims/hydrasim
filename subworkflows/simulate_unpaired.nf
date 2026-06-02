@@ -11,7 +11,7 @@ workflow SIMULATE_UNPAIRED {
     ch_recipes
     val_downsample_background
     val_dataset_coverage
-    val_tag_simulated_read_ids
+    val_tag_simulated_reads
     val_badread_per_segment
 
     main:
@@ -38,7 +38,7 @@ workflow SIMULATE_UNPAIRED {
         ch_spike_reads = SIMULATE_BADREAD_WHOLE_REFERENCE.out.reads
     }
 
-    if (val_tag_simulated_read_ids) {
+    if (val_tag_simulated_reads) {
         ch_spike_reads
             .map { meta, reads -> tuple(meta, reads, '') }
             .set { ch_tag_read_inputs }

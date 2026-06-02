@@ -110,7 +110,7 @@
           "description": "Target read count for background dataset downsampling.",
           "help_text": "Number of reads to retain from background datasets. Supports suffixed values like '10k' (10,000 reads)."
         },
-        "tag_simulated_read_ids": {
+        "tag_simulated_reads": {
           "type": "boolean",
           "default": false,
           "description": "Append simulator-specific tags to simulated read IDs before mixing them with background reads.",

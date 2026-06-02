@@ -10,7 +10,7 @@ workflow SIMULATE_PAIRED {
     ch_recipes
     val_downsample_background
     val_dataset_coverage
-    val_tag_simulated_read_ids
+    val_tag_simulated_reads
     val_wgsim_length_read1
     val_wgsim_length_read2
 
@@ -36,7 +36,7 @@ workflow SIMULATE_PAIRED {
         .map { meta, reads1, reads2 -> tuple(meta, [reads1, reads2]) }
         .set { ch_raw_simulated_reads }
 
-    if (val_tag_simulated_read_ids) {
+    if (val_tag_simulated_reads) {
         ch_raw_simulated_reads
             .flatMap { meta, reads ->
                 [
