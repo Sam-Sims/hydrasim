@@ -89,15 +89,11 @@
       "description": "Parameters controlling the simulation experiment design.",
       "properties": {
         "coverages": {
-          "type": "array",
-          "default": [
-            0.1,
-            1,
-            10,
-            100
-          ],
-          "description": "List of target spike-in coverage depths to simulate.",
-          "help_text": "Each reference genome will be spiked into each background dataset at each of these coverage levels."
+          "type": "string",
+          "default": "0.1,1,10,100",
+          "pattern": "^([0-9.]+)(,[0-9.]+)*$",
+          "description": "Comma-separated list of target spike-in coverage depths to simulate.",
+          "help_text": "Each reference genome will be spiked into each background dataset at each of these coverage levels. Override with e.g. --coverages '1,10,50'."
         },
         "downsample_background": {
           "type": "boolean",

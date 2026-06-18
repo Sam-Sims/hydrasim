@@ -9,7 +9,7 @@ workflow {
     HYDRASIM(
         file(params.reference_csv, type: 'file'),
         file(params.dataset_csv, type: 'file'),
-        channel.fromList(params.coverages),
+        channel.fromList(params.coverages.toString().split(',').collect { it.trim() as Float }),
         params.downsample_background,
         params.dataset_coverage,
         params.tag_simulated_reads,
