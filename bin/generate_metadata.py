@@ -5,6 +5,7 @@ import json
 import sys
 import uuid
 from datetime import date
+from decimal import Decimal
 from pathlib import Path
 
 COLUMNS = [
@@ -34,6 +35,7 @@ def main() -> None:
     parser.add_argument('--badread-chimeras', type=int, required=True)
     parser.add_argument('--badread-glitches', required=True)
     parser.add_argument('--badread-seed')
+    parser.add_argument('--badread-low-coverage-cutoff', type=Decimal, required=True)
     parser.add_argument('--badread-low-coverage-length')
 
     parser.add_argument('--downsample-background', action=argparse.BooleanOptionalAction, required=True)
@@ -69,13 +71,12 @@ def main() -> None:
 
     for run_index, record in enumerate(records):
         if record['single_end']:
-            strategy = 'badread_per_segment' if args.badread_per_segment else 'badread_default'
-            if (
-                args.badread_low_coverage_length
-                and record['badread_length'] is not None
-                and record['badread_length'] != args.badread_length
-            ):
-                strategy = f'{strategy}_low_cov'
+            if args.badread_per_segment:
+                strategy = 'badread_per_segment'
+            elif args.badread_low_coverage_cutoff != 0:
+                strategy = 'badread_default_low_cov'
+            else:
+                strategy = 'badread_default'
 
             simulator = 'badread'
             methods = {
