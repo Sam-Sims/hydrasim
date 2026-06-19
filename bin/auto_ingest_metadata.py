@@ -57,11 +57,9 @@ for run_idx, run_rows in records.items():
         shutil.copyfile(r1_in_filename, r1_upload_name)
 
         for filename in [outfilename, r1_upload_name]:
-            with open(filename, 'rb') as f:
-                s3.put_object(
-                    Bucket=bucket,
-                    Key=os.path.basename(filename),
-                    Body=f,
-                    ContentLength=os.path.getsize(filename),
-                )
+            s3.upload_file(
+                filename,
+                bucket,
+                os.path.basename(filename),
+            )
             print(f'Uploaded {filename} to {bucket}')
