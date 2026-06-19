@@ -4,6 +4,7 @@ include { SIMULATE_UNPAIRED                        } from '../subworkflows/simul
 include { SIMULATE_PAIRED                          } from '../subworkflows/simulate_paired'
 include { SUMMARISE_SEQKIT                         } from '../modules/summary/summarise_seqkit'
 include { GENERATE_METADATA                        } from '../modules/metadata/generate'
+include { UPLOAD                                  } from '../modules/upload/upload'
 
 workflow HYDRASIM {
     take:
@@ -163,6 +164,18 @@ workflow HYDRASIM {
             ch_metadata_records,
             workflow.manifest.version
         )
+
+        if (params.auto_ingest) {
+            SIMULATE_UNPAIRED.out.reads
+                .map { _meta, reads -> reads }
+                .collect()
+                .set { ch_upload_reads }
+
+            UPLOAD(
+                GENERATE_METADATA.out.csv,
+                ch_upload_reads
+            )
+        }
     }
 
     emit:
