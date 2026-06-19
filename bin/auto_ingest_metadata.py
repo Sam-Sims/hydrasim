@@ -13,7 +13,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('metadata_csv')
 args = parser.parse_args()
 
-bucket = os.environ['HYDRASIM_UPLOAD_BUKCET']
+bucket = os.environ['HYDRASIM_UPLOAD_BUCKET']
 s3_config = Config(retries={'total_max_attempts': 3, 'mode': 'standard'})
 s3 = boto3.client('s3', config=s3_config, endpoint_url='https://s3.climb.ac.uk')
 
