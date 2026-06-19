@@ -1,3 +1,0 @@
-id,layout,accession,reads_1,reads_2
-test_ont_1,single,,s3://sra-pub-src-16/SRR18447630/BAL033.Meta.Rmhost.fq.gz.1,
-test_illumina_1,paired,,s3://sra-pub-src-14/SRR12180706/10.1.fq.gz.1,s3://sra-pub-src-14/SRR12180706/10.2.fq.gz.1
