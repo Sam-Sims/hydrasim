@@ -57,14 +57,17 @@ workflow HYDRASIM {
         .fromPath(val_dataset_csv)
         .splitCsv(header: true)
         .map { row ->
-            def id        = "${row.id}".trim()
-            def layout    = "${row.layout}".trim()
-            def accession = row.accession ? "${row.accession}".trim() : ''
-            def reads1    = row.reads_1 ? file("${row.reads_1}".trim(), checkIfExists: true) : []
-            def reads2    = row.reads_2 ? file("${row.reads_2}".trim(), checkIfExists: true) : []
-            def meta      = [
-                id        : id,
-                single_end: layout == 'single'
+            def id              = "${row.id}".trim()
+            def layout          = "${row.layout}".trim()
+            def accession       = row.accession ? "${row.accession}".trim() : ''
+            def reads1          = row.reads_1 ? file("${row.reads_1}".trim(), checkIfExists: true) : []
+            def reads2          = row.reads_2 ? file("${row.reads_2}".trim(), checkIfExists: true) : []
+            def source_climb_id = row.source_climb_id ? "${row.source_climb_id}".trim() : ''
+            def meta            = [
+                id             : id,
+                single_end     : layout == 'single',
+                accession      : accession,
+                source_climb_id: source_climb_id
             ]
 
             tuple(meta, accession, reads1, reads2)
@@ -89,12 +92,14 @@ workflow HYDRASIM {
         .combine(ch_datasets)
         .map { ref_meta, ref_fasta, coverage, dataset_meta, reads ->
             def meta      = [
-                id            : dataset_meta.id,
-                ref_id        : ref_meta.id,
-                single_end    : dataset_meta.single_end,
-                coverage      : coverage,
-                badread_length: null,
-                ref_taxon_id  : ref_meta.taxon_id
+                id             : dataset_meta.id,
+                ref_id         : ref_meta.id,
+                single_end     : dataset_meta.single_end,
+                coverage       : coverage,
+                badread_length : null,
+                ref_taxon_id   : ref_meta.taxon_id,
+                accession      : dataset_meta.accession,
+                source_climb_id: dataset_meta.source_climb_id
             ]
 
             tuple(meta, ref_fasta, coverage, reads)

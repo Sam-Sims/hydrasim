@@ -1,2 +1,2 @@
-id,layout,accession,reads_1,reads_2
-ERR13982109,single,ERR13982109,,
+id,layout,accession,source_climb_id,reads_1,reads_2
+ERR13982109,single,ERR13982109,,,

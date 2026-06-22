@@ -51,6 +51,12 @@ nextflow run sam-sims/hydrasim \
   --generate_metadata true \
   --tag_simulated_reads true
 ```
+Or you can run the test profile:
+
+```bash
+nextflow run sam-sims/hydrasim -profile test
+```
+
 ### Input files
 
 Reference CSV:
@@ -65,12 +71,17 @@ reference_1,,reference_1.fasta,12345
 Dataset CSV:
 
 ```csv
-id,layout,accession,reads_1,reads_2
-ERR123456789,single,,ERR123456789.fastq.gz,
-ERR987654321,paired,,ERR987654321_1.fastq.gz,ERR987654321_2.fastq.gz
+id,layout,accession,source_climb_id,reads_1,reads_2
+ERR123456789,single,,,ERR123456789.fastq.gz,
+ERR987654321,paired,,,ERR987654321_1.fastq.gz,ERR987654321_2.fastq.gz
+ERR555555555,single,ERR555555555,,,
 ```
 
-For references and datasets, provide exactly one source per row: either an accession or local files. If `accession` is set, Hydrasim downloads it. If local paths are set, leave `accession` blank.
+For references and datasets, provide one source per row, either an accession or local files. 
+
+If `accession` is set Hydrasim downloads it. If local paths are set, leave `accession` blank. 
+
+`source_climb_id` is optional and is only populated in the output `metadata.csv` when provided.
 
 Reference accessions are downloaded with NCBI Datasets. Dataset accessions are downloaded with `sracha`.
 

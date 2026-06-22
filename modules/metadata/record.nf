@@ -29,6 +29,8 @@ process METADATA_RECORD {
     cat > "${prefix}.metadata.json" <<EOF
     {
       "dataset_id": "${meta.id}",
+      "source_climb_id": "${meta.source_climb_id}",
+      "accession": "${meta.accession}",
       "ref_id": "${meta.ref_id}",
       "single_end": ${meta.single_end},
       "coverage": "${meta.coverage}",
