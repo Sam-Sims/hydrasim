@@ -26,6 +26,16 @@
         ],
         "errorMessage": "Accession should be blank or a non-empty SRA accession without spaces"
       },
+      "source_climb_id": {
+        "anyOf": [
+          { "const": "" },
+          {
+            "type": "string",
+            "pattern": "^\\S+$"
+          }
+        ],
+        "errorMessage": "Source CLIMB ID should be blank or ID"
+      },
       "reads_1": {
         "anyOf": [
           { "const": "" },
@@ -58,6 +68,9 @@
           "accession": {
             "type": "string",
             "pattern": "^\\S+$"
+          },
+          "source_climb_id": {
+            "const": ""
           },
           "reads_1": {
             "const": ""

@@ -31,7 +31,7 @@
           "pattern": "^\\S+\\.csv$",
           "schema": "assets/schema_dataset.json",
           "description": "Path to background datasets CSV samplesheet.",
-          "help_text": "A CSV file listing metagenomic background datasets. Must contain 'id', 'layout', 'accession', 'reads_1', and 'reads_2' columns. Set layout to 'single' or 'paired'. Provide exactly one source per row: an SRA accession, a single-end reads_1 path, or paired-end reads_1 and reads_2 paths."
+          "help_text": "A CSV file listing metagenomic background datasets. Must contain 'id', 'layout', 'accession', 'reads_1', and 'reads_2' columns, and may include optional 'source_climb_id'. Set layout to 'single' or 'paired'. Provide exactly one source per row: an SRA accession, a single-end reads_1 path, or paired-end reads_1 and reads_2 paths. Accession downloads leave source_climb_id blank; local FASTQs populate source_climb_id only when explicitly provided."
         },
         "outdir": {
           "type": "string",
@@ -228,6 +228,12 @@
           "default": false,
           "description": "Generate a metadata CSV for DB ingestion at the end of the pipeline."
         },
+        "auto_ingest": {
+          "type": "boolean",
+          "default": false,
+          "description": "Upload generated metadata and FASTQ files to ingest bucket set in HYDRASIM_UPLOAD_BUCKET.",
+          "help_text": "Requires --generate_metadata true. Set HYDRASIM_UPLOAD_BUCKET first."
+        },
         "metadata_study_id": {
           "type": "string",
           "default": "hydrasim",
@@ -284,6 +290,28 @@
     },
     {
       "$ref": "#/$defs/metadata_options"
+    },
+    {
+      "if": {
+        "properties": {
+          "auto_ingest": {
+            "const": true
+          }
+        },
+        "required": [
+          "auto_ingest"
+        ]
+      },
+      "then": {
+        "properties": {
+          "generate_metadata": {
+            "const": true
+          }
+        },
+        "required": [
+          "generate_metadata"
+        ]
+      }
     }
   ]
 }
