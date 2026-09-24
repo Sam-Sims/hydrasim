@@ -25,6 +25,7 @@ process METADATA_RECORD {
     read_stats=\$(extract_seqkit_metrics.py ${seqkit_stats})
     simulated_reads=\$(echo "\${read_stats}" | cut -f 1)
     simulated_avg_qual=\$(echo "\${read_stats}" | cut -f 2)
+    simulated_mean_read_identity=\$(echo "\${read_stats}" | cut -f 3)
 
     cat > "${prefix}.metadata.json" <<EOF
     {
@@ -38,7 +39,8 @@ process METADATA_RECORD {
       "ref_taxon_id": ${ref_taxon_id},
       "reads": "${reads_dir}/\${r1}",
       "simulated_reads": \${simulated_reads},
-      "simulated_avg_qual": \${simulated_avg_qual}
+      "simulated_avg_qual": \${simulated_avg_qual},
+      "simulated_mean_read_identity": \${simulated_mean_read_identity}
     }
     EOF
     """

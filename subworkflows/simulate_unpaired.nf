@@ -5,6 +5,7 @@ include { FASTQ_CONCAT as FASTQ_CONCAT_BACKGROUND         } from '../modules/fas
 include { METADATA_RECORD                                 } from '../modules/metadata/record'
 include { SEQKIT_STATS                                    } from '../modules/seqkit/stats'
 include { FASTQ_TAG_READ_IDS                             } from '../modules/fastq/tag_read_ids'
+include { BADREAD_READ_IDENTITY                           } from '../modules/badread/read_identity'
 
 workflow SIMULATE_UNPAIRED {
     take:
@@ -55,6 +56,12 @@ workflow SIMULATE_UNPAIRED {
     SEQKIT_STATS(ch_simulated_reads)
 
     ch_simulated_reads
+        .join(SEQKIT_STATS.out.tsv)
+        .set { ch_read_identity_inputs }
+
+    BADREAD_READ_IDENTITY(ch_read_identity_inputs)
+
+    ch_simulated_reads
         .join(ch_background_reads)
         .map { meta, spike_reads, base_reads -> tuple(meta, [spike_reads, base_reads], '') }
         .set { ch_concat_reads }
@@ -62,7 +69,7 @@ workflow SIMULATE_UNPAIRED {
     FASTQ_CONCAT_BACKGROUND(ch_concat_reads)
 
     FASTQ_CONCAT_BACKGROUND.out.reads
-        .join(SEQKIT_STATS.out.tsv)
+        .join(BADREAD_READ_IDENTITY.out.tsv)
         .set { ch_metadata_record_inputs }
 
     METADATA_RECORD(ch_metadata_record_inputs)
@@ -70,5 +77,5 @@ workflow SIMULATE_UNPAIRED {
     emit:
     reads           = FASTQ_CONCAT_BACKGROUND.out.reads
     metadata        = METADATA_RECORD.out.metadata
-    simulated_stats = SEQKIT_STATS.out.tsv
+    simulated_stats = BADREAD_READ_IDENTITY.out.tsv
 }
