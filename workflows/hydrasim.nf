@@ -32,9 +32,11 @@ workflow HYDRASIM {
             def accession = row.accession ? "${row.accession}".trim() : ''
             def fasta     = row.path ? file("${row.path}".trim(), checkIfExists: true) : []
             def taxon_id  = row.taxon_id ? "${row.taxon_id}".trim() : ''
+            def study_id  = row.study_id ? "${row.study_id}".trim() : null
             def meta      = [
                 id       : id,
-                taxon_id : taxon_id ? taxon_id as Long : null
+                taxon_id : taxon_id ? taxon_id as Long : null,
+                study_id : study_id
             ]
             tuple(meta, accession, fasta)
         }
@@ -98,6 +100,7 @@ workflow HYDRASIM {
                 coverage       : coverage,
                 badread_length : null,
                 ref_taxon_id   : ref_meta.taxon_id,
+                ref_study_id   : ref_meta.study_id,
                 accession      : dataset_meta.accession,
                 source_climb_id: dataset_meta.source_climb_id
             ]

@@ -94,6 +94,8 @@ def main() -> None:
     writer.writeheader()
 
     for run_index, record in enumerate(records):
+        coverage_label = f"{str(float(record['coverage'])).rstrip('0').rstrip('.')}x"
+
         if record["single_end"]:
             if args.badread_per_segment:
                 strategy = "badread_per_segment"
@@ -106,7 +108,7 @@ def main() -> None:
             methods = {
                 "hydrasim_strategy": strategy,
                 "hydrasim_version": args.hydrasim_version,
-                "coverage": f"{str(float(record['coverage'])).rstrip('0').rstrip('.')}x",
+                "coverage": coverage_label,
                 "reference_id": record["ref_id"],
                 "input_accession": record["accession"],
                 "simulator": simulator,
@@ -132,7 +134,7 @@ def main() -> None:
             methods = {
                 "hydrasim_strategy": strategy,
                 "hydrasim_version": args.hydrasim_version,
-                "coverage": f"{str(float(record['coverage'])).rstrip('0').rstrip('.')}x",
+                "coverage": coverage_label,
                 "reference_id": record["ref_id"],
                 "input_accession": record["accession"],
                 "simulator": simulator,
@@ -152,8 +154,8 @@ def main() -> None:
         writer.writerow(
             {
                 "run_index": run_index,
-                "study_id": args.study_id,
-                "biosample_id": f"{record['dataset_id']}-{strategy}",
+                "study_id": record.get("study_id") or args.study_id,
+                "biosample_id": f"{record['dataset_id']}-{record['ref_id']}-{coverage_label}-{strategy}",
                 "r1": record["reads"],
                 "spiked_ids": f"[{taxon_id}]" if taxon_id else "[]",
                 "source_climb_id": record["source_climb_id"],

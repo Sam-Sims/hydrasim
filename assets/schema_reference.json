@@ -45,6 +45,16 @@
           }
         ],
         "errorMessage": "taxon_id should be blank or an NCBI taxon ID (integer)"
+      },
+      "study_id": {
+        "anyOf": [
+          { "const": "" },
+          {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9._-]+$"
+          }
+        ],
+        "errorMessage": "study_id should be blank or contain only letters, digits, '.', '_' or '-'"
       }
     },
     "required": ["id"],

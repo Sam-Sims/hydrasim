@@ -21,7 +21,7 @@
           "pattern": "^\\S+\\.csv$",
           "schema": "assets/schema_reference.json",
           "description": "Path to reference organisms CSV samplesheet.",
-          "help_text": "A CSV file listing reference genomes to spike into background datasets. Must contain 'id', 'accession', and 'path' columns, and may include optional integer 'taxon_id'. Provide exactly one of 'accession' or 'path' for each reference row."
+          "help_text": "A CSV file listing reference genomes to spike into background datasets. Must contain 'id', 'accession', and 'path' columns, and may include optional integer 'taxon_id' and optional 'study_id' (overrides --metadata_study_id for that reference). Provide exactly one of 'accession' or 'path' for each reference row."
         },
         "dataset_csv": {
           "type": "string",

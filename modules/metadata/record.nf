@@ -18,6 +18,7 @@ process METADATA_RECORD {
     def reads_dir      = task.ext.reads_dir ?: '.'
     def badread_length = meta.badread_length != null ? "\"${meta.badread_length}\"" : 'null'
     def ref_taxon_id   = meta.ref_taxon_id != null ? meta.ref_taxon_id : 'null'
+    def ref_study_id   = meta.ref_study_id ? "\"${meta.ref_study_id}\"" : 'null'
 
     """
     read_files=( ${reads} )
@@ -37,6 +38,7 @@ process METADATA_RECORD {
       "coverage": "${meta.coverage}",
       "badread_length": ${badread_length},
       "ref_taxon_id": ${ref_taxon_id},
+      "study_id": ${ref_study_id},
       "reads": "${reads_dir}/\${r1}",
       "simulated_reads": \${simulated_reads},
       "simulated_avg_qual": \${simulated_avg_qual},
