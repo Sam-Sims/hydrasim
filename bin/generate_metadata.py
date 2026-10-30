@@ -155,7 +155,7 @@ def main() -> None:
             {
                 "run_index": run_index,
                 "study_id": record.get("study_id") or args.study_id,
-                "biosample_id": f"{record['dataset_id']}-{record['ref_id']}-{coverage_label}-{strategy}",
+                "biosample_id": run_id,
                 "r1": record["reads"],
                 "spiked_ids": f"[{taxon_id}]" if taxon_id else "[]",
                 "source_climb_id": record["source_climb_id"],
