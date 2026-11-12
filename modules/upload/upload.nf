@@ -7,9 +7,6 @@ process UPLOAD {
     path metadata_csv
     path upload_reads
 
-    when:
-    task.ext.when == null || task.ext.when
-
     script:
     """
     auto_ingest_metadata.py ${metadata_csv}

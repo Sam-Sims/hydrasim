@@ -8,10 +8,12 @@
     "properties": {
       "id": {
         "type": "string",
+        "meta": ["id"],
         "pattern": "^\\S+$",
         "errorMessage": "Reference ID must be provided and cannot contain spaces"
       },
       "accession": {
+        "meta": ["accession"],
         "anyOf": [
           { "const": "" },
           {
@@ -27,12 +29,14 @@
           {
             "type": "string",
             "format": "file-path",
+            "exists": true,
             "pattern": "^\\S+$"
           }
         ],
         "errorMessage": "Path should be blank or a valid local FASTA file path without spaces"
       },
       "taxon_id": {
+        "meta": ["taxon_id"],
         "anyOf": [
           { "const": "" },
           {
@@ -47,17 +51,13 @@
         "errorMessage": "taxon_id should be blank or an NCBI taxon ID (integer)"
       },
       "study_id": {
-        "anyOf": [
-          { "const": "" },
-          {
-            "type": "string",
-            "pattern": "^[A-Za-z0-9._-]+$"
-          }
-        ],
-        "errorMessage": "study_id should be blank or contain only letters, digits, '.', '_' or '-'"
+        "meta": ["study_id"],
+        "type": "string",
+        "pattern": "^[A-Za-z0-9._-]+$",
+        "errorMessage": "study_id must be provided and contain only letters, digits, '.', '_' or '-'"
       }
     },
-    "required": ["id"],
+    "required": ["id", "study_id"],
     "additionalProperties": false,
     "oneOf": [
       {

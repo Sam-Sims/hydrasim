@@ -2,9 +2,7 @@
 import argparse
 import csv
 import os
-import shutil
 import tempfile
-
 
 import boto3
 from botocore.config import Config
@@ -18,46 +16,24 @@ s3_config = Config(retries={"total_max_attempts": 3, "mode": "standard"})
 s3 = boto3.client("s3", config=s3_config, endpoint_url="https://s3.climb.ac.uk")
 
 with open(args.metadata_csv, newline="") as f:
-    reader = csv.DictReader(f)
-    rows = list(reader)
-    columns = reader.fieldnames
+    rows = list(csv.DictReader(f))
 
-records = {}
 for row in rows:
-    records.setdefault(row["run_index"], []).append(row)
+    # same naming scheme as eesi synthscape.<run_index>.<run_id>.{csv,fastq.gz}
+    basename = f"synthscape.{row['run_index']}.{row['run_id']}"
+    csv_name = f"{basename}.csv"
+    reads_name = f"{basename}.fastq.gz"
+    columns = [col for col, value in row.items() if value and col != "r1"]
 
-file_control_cols = {
-    "r1",
-    "r1_upload_name",
-    "csv_name",
-}
-
-cols_for_upload = [col for col in columns if col not in file_control_cols]
-
-for run_idx, run_rows in records.items():
     with tempfile.TemporaryDirectory() as tempdir:
-        outfilename = os.path.join(tempdir, run_rows[0]["csv_name"])
-
-        r1_in_filename = os.path.basename(run_rows[0]["r1"])
-        r1_upload_name = os.path.join(tempdir, run_rows[0]["r1_upload_name"])
-
-        cols_to_write = [
-            col for col in cols_for_upload if any(row[col] for row in run_rows)
-        ]
-
-        with open(outfilename, "w", newline="") as f:
-            writer = csv.DictWriter(f, fieldnames=cols_to_write)
+        csv_path = os.path.join(tempdir, csv_name)
+        with open(csv_path, "w", newline="") as f:
+            writer = csv.DictWriter(f, fieldnames=columns)
             writer.writeheader()
-            writer.writerows(
-                {col: row[col] for col in cols_to_write} for row in run_rows
-            )
+            writer.writerow({col: row[col] for col in columns})
 
-        shutil.copyfile(r1_in_filename, r1_upload_name)
+        s3.upload_file(csv_path, bucket, csv_name)
+        print(f"Uploaded {csv_name} to {bucket}")
 
-        for filename in [outfilename, r1_upload_name]:
-            s3.upload_file(
-                filename,
-                bucket,
-                os.path.basename(filename),
-            )
-            print(f"Uploaded {filename} to {bucket}")
+    s3.upload_file(os.path.basename(row["r1"]), bucket, reads_name)
+    print(f"Uploaded {reads_name} to {bucket}")

@@ -1,0 +1,23 @@
+[workspace]
+name = "hydrasim"
+channels = ["conda-forge", "bioconda"]
+platforms = ["linux-64", "osx-64", "osx-arm64"]
+
+[dependencies]
+nextflow = "*"
+
+[activation.env]
+NXF_VER = "26.10.3"
+
+[tasks.lint]
+cmd = "nextflow lint ."
+
+[tasks.format]
+cmd = "nextflow lint -format -harshil-alignment ."
+
+[tasks.test]
+args = [{ arg = "profile", default = "docker" }]
+cmd = "nextflow run main.nf -profile test,{{ profile }}"
+
+[tasks.clean]
+cmd = "bash -c 'rm -rf work .nextflow .nextflow.log*'"

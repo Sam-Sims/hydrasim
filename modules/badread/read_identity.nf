@@ -1,5 +1,5 @@
 process BADREAD_READ_IDENTITY {
-    tag "$meta.id"
+    tag "${meta.id}"
     label 'process_single'
 
     container 'community.wave.seqera.io/library/python:3.12.13--27a817c2c0890658'
@@ -10,15 +10,10 @@ process BADREAD_READ_IDENTITY {
     output:
     tuple val(meta), path("*.seqkit_stats.tsv"), emit: tsv
 
-    when:
-    task.ext.when == null || task.ext.when
-
     script:
-    def prefix = task.ext.prefix ?: "${meta.id}.simulated"
+    def prefix = task.ext.prefix ?: "${meta.id}"
 
     """
-    add_badread_identity.py \
-        ${stats} \
-        > "${prefix}.seqkit_stats.tsv"
+    add_badread_identity.py ${stats} > "${prefix}.seqkit_stats.tsv"
     """
 }

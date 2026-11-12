@@ -7,7 +7,7 @@
     "input_output_options": {
       "title": "Input/output options",
       "type": "object",
-      "description": "Define where the pipeline should find input data and save output data.",
+      "description": "Define where the pipeline should find input data.",
       "required": [
         "reference_csv",
         "dataset_csv"
@@ -21,7 +21,7 @@
           "pattern": "^\\S+\\.csv$",
           "schema": "assets/schema_reference.json",
           "description": "Path to reference organisms CSV samplesheet.",
-          "help_text": "A CSV file listing reference genomes to spike into background datasets. Must contain 'id', 'accession', and 'path' columns, and may include optional integer 'taxon_id' and optional 'study_id' (overrides --metadata_study_id for that reference). Provide exactly one of 'accession' or 'path' for each reference row."
+          "help_text": "A CSV file listing reference genomes to spike into background datasets. Must contain 'id', 'accession', and 'path' columns, and may include optional integer 'taxon_id' and a required 'study_id' recorded in the metadata CSV for every sample spiked with that reference. Provide exactly one of 'accession' or 'path' for each reference row."
         },
         "dataset_csv": {
           "type": "string",
@@ -31,34 +31,7 @@
           "pattern": "^\\S+\\.csv$",
           "schema": "assets/schema_dataset.json",
           "description": "Path to background datasets CSV samplesheet.",
-          "help_text": "A CSV file listing metagenomic background datasets. Must contain 'id', 'layout', 'accession', 'reads_1', and 'reads_2' columns, and may include optional 'source_climb_id'. Set layout to 'single' or 'paired'. Provide exactly one source per row: an SRA accession, a single-end reads_1 path, or paired-end reads_1 and reads_2 paths. Accession downloads leave source_climb_id blank; local FASTQs populate source_climb_id only when explicitly provided."
-        },
-        "outdir": {
-          "type": "string",
-          "format": "directory-path",
-          "default": "output",
-          "description": "Output directory for results."
-        },
-        "publish_dir_mode": {
-          "type": "string",
-          "default": "copy",
-          "description": "Method for publishing output files.",
-          "help_text": "Nextflow publishDir mode. Use 'copy' to copy files, 'symlink' for symbolic links, etc.",
-          "enum": [
-            "symlink",
-            "rellink",
-            "link",
-            "copy",
-            "copyNoFollow",
-            "move"
-          ],
-          "hidden": true
-        },
-        "tracedir": {
-          "type": "string",
-          "default": "${params.outdir}/pipeline_info",
-          "description": "Directory for Nextflow trace/report/timeline files.",
-          "hidden": true
+          "help_text": "A CSV file listing ONT background datasets. Must contain 'id', 'accession', and 'reads' columns, and may include optional 'source_climb_id'. Provide exactly one source per row: an SRA accession or a local/S3 FASTQ path in 'reads'."
         }
       }
     },
@@ -67,19 +40,11 @@
       "type": "object",
       "description": "Directories for caching downloaded reference genomes and datasets.",
       "properties": {
-        "reference_dir": {
+        "store_dir": {
           "type": "string",
           "format": "directory-path",
-          "default": "store/references",
-          "description": "Directory to store downloaded reference genomes.",
-          "help_text": "Downloaded reference FASTA files are saved here for reuse across pipeline runs."
-        },
-        "dataset_dir": {
-          "type": "string",
-          "format": "directory-path",
-          "default": "store/datasets",
-          "description": "Directory to store downloaded dataset FASTQ files.",
-          "help_text": "Downloaded FASTQ files are saved here for reuse across pipeline runs."
+          "description": "Directory to cache downloaded reference genomes and dataset FASTQ files.",
+          "help_text": "Downloads are saved under 'references/<id>/' and 'datasets/<id>/' in this directory and reused across pipeline runs."
         }
       }
     },
@@ -90,27 +55,23 @@
       "properties": {
         "coverages": {
           "type": "string",
-          "default": "0.1,1,10,100",
           "pattern": "^([0-9.]+)(,[0-9.]+)*$",
           "description": "Comma-separated list of target spike-in coverage depths to simulate.",
           "help_text": "Each reference genome will be spiked into each background dataset at each of these coverage levels. Override with e.g. --coverages '1,10,50'."
         },
         "downsample_background": {
           "type": "boolean",
-          "default": true,
-          "description": "Whether to downsample background datasets before spiking."
+          "description": "Downsample each background dataset with Rasusa before spiking (opt-in)."
         },
-        "dataset_coverage": {
+        "downsample_bases": {
           "type": "string",
-          "default": "10k",
-          "description": "Target read count for background dataset downsampling.",
-          "help_text": "Number of reads to retain from background datasets. Supports suffixed values like '10k' (10,000 reads)."
+          "description": "Total bases to downsample each background dataset to (with --downsample_background).",
+          "help_text": "Passed to Rasusa --bases. Supports suffixed values like '10k' (10,000 bases)."
         },
         "tag_simulated_reads": {
           "type": "boolean",
-          "default": false,
           "description": "Append simulator-specific tags to simulated read IDs before mixing them with background reads.",
-          "help_text": "When enabled, simulated read IDs are tagged in the retained read ID token, e.g. '_badread' or '_wgsim', so uploaded reads can be identified after ingest assigns new sample IDs."
+          "help_text": "When enabled, simulated read IDs are tagged with '_badread' in the retained read ID token, so uploaded reads can be identified after ingest assigns new sample IDs."
         }
       }
     },
@@ -121,64 +82,47 @@
       "properties": {
         "badread_length": {
           "type": "string",
-          "default": "15000,13000",
           "description": "Read length distribution for Badread (mean,stdev)."
         },
         "badread_per_segment": {
           "type": "boolean",
-          "default": false,
           "description": "Run Badread independently for each FASTA record before concatenating segment reads.",
           "help_text": "Useful for segmented references where every segment should be represented. Changes low-coverage semantics because Badread crosses the target independently for each FASTA record."
         },
         "badread_low_coverage_cutoff": {
-          "type": [
-            "number",
-            "null"
-          ],
-          "default": null,
+          "type": "number",
           "description": "Coverage threshold at or below which Badread uses badread_low_coverage_length."
         },
         "badread_low_coverage_length": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "default": null,
+          "type": "string",
           "description": "Badread length distribution to use for coverages at or below badread_low_coverage_cutoff."
         },
         "badread_identity": {
           "type": "string",
-          "default": "95,99,2.5",
           "description": "Read identity distribution for Badread (mean,max,stdev)."
         },
         "badread_error_model": {
           "type": "string",
-          "default": "nanopore2023",
           "description": "Badread error model to use."
         },
         "badread_qscore_model": {
           "type": "string",
-          "default": "nanopore2023",
           "description": "Badread quality score model to use."
         },
         "badread_junk_reads": {
-          "type": "number",
-          "default": 1,
+          "type": "integer",
           "description": "Percentage of junk reads in Badread output."
         },
         "badread_random_reads": {
-          "type": "number",
-          "default": 1,
+          "type": "integer",
           "description": "Percentage of random reads in Badread output."
         },
         "badread_chimeras": {
-          "type": "number",
-          "default": 1,
+          "type": "integer",
           "description": "Percentage of chimeric reads in Badread output."
         },
         "badread_glitches": {
           "type": "string",
-          "default": "10000,25,25",
           "description": "Glitch parameters for Badread (size,skip,adapter)."
         },
         "badread_seed": {
@@ -186,35 +130,7 @@
             "integer",
             "null"
           ],
-          "default": null,
           "description": "Random number generator seed for deterministic Badread output."
-        }
-      }
-    },
-    "wgsim_options": {
-      "title": "Wgsim options",
-      "type": "object",
-      "description": "Parameters for wgsim short-read (Illumina) simulation.",
-      "properties": {
-        "wgsim_length_read1": {
-          "type": "string",
-          "default": "150",
-          "description": "Length of simulated read 1."
-        },
-        "wgsim_length_read2": {
-          "type": "string",
-          "default": "150",
-          "description": "Length of simulated read 2."
-        },
-        "wgsim_mutation_rate": {
-          "type": "string",
-          "default": "0.001",
-          "description": "Base mutation rate for wgsim."
-        },
-        "wgsim_indel_fraction": {
-          "type": "string",
-          "default": "0.15",
-          "description": "Fraction of mutations that are indels in wgsim."
         }
       }
     },
@@ -225,48 +141,38 @@
       "properties": {
         "generate_metadata": {
           "type": "boolean",
-          "default": false,
           "description": "Generate a metadata CSV for DB ingestion at the end of the pipeline."
         },
         "auto_ingest": {
           "type": "boolean",
-          "default": false,
           "description": "Upload generated metadata and FASTQ files to ingest bucket set in HYDRASIM_UPLOAD_BUCKET.",
           "help_text": "Requires --generate_metadata true. Set HYDRASIM_UPLOAD_BUCKET first."
         },
-        "metadata_study_id": {
-          "type": "string",
-          "default": "hydrasim",
-          "description": "Study ID to record in the metadata CSV."
-        },
         "metadata_sample_source": {
           "type": "string",
-          "default": "other",
           "description": "Sample source to record in the metadata CSV (e.g. upper_respiratory)."
         },
         "metadata_sample_type": {
           "type": "string",
-          "default": "other",
           "description": "Sample type to record in the metadata CSV."
         },
         "metadata_governance_status": {
           "type": "string",
-          "default": "no_consent_for_research",
           "description": "Governance status to record in the metadata CSV."
         },
         "metadata_input_type": {
           "type": "string",
-          "default": "validation_material",
           "description": "Input type to record in the metadata CSV."
         },
         "metadata_spike_in": {
           "type": "string",
-          "default": "none",
           "description": "Spike-in value to record in the metadata CSV."
         },
         "metadata_received_date": {
-          "type": ["string", "null"],
-          "default": null,
+          "type": [
+            "string",
+            "null"
+          ],
           "description": "Received date (ISO format). Defaults to the date the pipeline was run."
         }
       }
@@ -284,9 +190,6 @@
     },
     {
       "$ref": "#/$defs/badread_options"
-    },
-    {
-      "$ref": "#/$defs/wgsim_options"
     },
     {
       "$ref": "#/$defs/metadata_options"

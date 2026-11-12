@@ -1,22 +1,19 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Hydrasim dataset samplesheet schema",
-  "description": "Schema for the background datasets CSV used by Hydrasim",
+  "description": "Schema for the single-end background datasets CSV used by Hydrasim",
   "type": "array",
   "items": {
     "type": "object",
     "properties": {
       "id": {
         "type": "string",
+        "meta": ["id"],
         "pattern": "^\\S+$",
         "errorMessage": "Dataset ID must be provided and cannot contain spaces"
       },
-      "layout": {
-        "type": "string",
-        "enum": ["single", "paired"],
-        "errorMessage": "Layout must be 'single' or 'paired'"
-      },
       "accession": {
+        "meta": ["accession"],
         "anyOf": [
           { "const": "" },
           {
@@ -27,6 +24,7 @@
         "errorMessage": "Accession should be blank or a non-empty SRA accession without spaces"
       },
       "source_climb_id": {
+        "meta": ["source_climb_id"],
         "anyOf": [
           { "const": "" },
           {
@@ -36,30 +34,20 @@
         ],
         "errorMessage": "Source CLIMB ID should be blank or ID"
       },
-      "reads_1": {
+      "reads": {
         "anyOf": [
           { "const": "" },
           {
             "type": "string",
             "format": "file-path",
+            "exists": true,
             "pattern": "^\\S+$"
           }
         ],
-        "errorMessage": "Path to read 1 FASTQ should be blank or a local/S3 file path without spaces"
-      },
-      "reads_2": {
-        "anyOf": [
-          { "const": "" },
-          {
-            "type": "string",
-            "format": "file-path",
-            "pattern": "^\\S+$"
-          }
-        ],
-        "errorMessage": "Path to read 2 FASTQ should be blank or a local/S3 file path without spaces"
+        "errorMessage": "Path to FASTQ should be blank or a local/S3 file path without spaces"
       }
     },
-    "required": ["id", "layout"],
+    "required": ["id"],
     "additionalProperties": false,
     "oneOf": [
       {
@@ -72,48 +60,18 @@
           "source_climb_id": {
             "const": ""
           },
-          "reads_1": {
-            "const": ""
-          },
-          "reads_2": {
+          "reads": {
             "const": ""
           }
         }
       },
       {
-        "required": ["reads_1"],
+        "required": ["reads"],
         "properties": {
-          "layout": {
-            "const": "single"
-          },
           "accession": {
             "const": ""
           },
-          "reads_1": {
-            "type": "string",
-            "format": "file-path",
-            "pattern": "^\\S+$"
-          },
-          "reads_2": {
-            "const": ""
-          }
-        }
-      },
-      {
-        "required": ["reads_1", "reads_2"],
-        "properties": {
-          "layout": {
-            "const": "paired"
-          },
-          "accession": {
-            "const": ""
-          },
-          "reads_1": {
-            "type": "string",
-            "format": "file-path",
-            "pattern": "^\\S+$"
-          },
-          "reads_2": {
+          "reads": {
             "type": "string",
             "format": "file-path",
             "pattern": "^\\S+$"
@@ -122,7 +80,7 @@
       }
     ],
     "errorMessage": {
-      "oneOf": "Each dataset row must provide exactly one source: accession with no read paths, layout 'single' with reads_1 only, or layout 'paired' with reads_1 and reads_2"
+      "oneOf": "Each dataset row must provide exactly one source: an SRA accession, or a single-end FASTQ path in reads"
     }
   }
 }

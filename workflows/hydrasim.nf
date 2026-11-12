@@ -1,194 +1,136 @@
-include { NCBI_DATASETS_DOWNLOAD_GENOME            } from '../modules/datasets/download'
-include { SRACHA_GET                               } from '../modules/sracha/sracha'
-include { SIMULATE_UNPAIRED                        } from '../subworkflows/simulate_unpaired'
-include { SIMULATE_PAIRED                          } from '../subworkflows/simulate_paired'
-include { SUMMARISE_SEQKIT                         } from '../modules/summary/summarise_seqkit'
-include { GENERATE_METADATA                        } from '../modules/metadata/generate'
-include { UPLOAD                                  } from '../modules/upload/upload'
+include { NCBI_DATASETS_DOWNLOAD_GENOME } from '../modules/datasets/download'
+include { SRACHA_GET                    } from '../modules/sracha/sracha'
+include { RASUSA_READS                  } from '../modules/rasusa/reads'
+include { SIMULATE_SPIKE_IN             } from '../subworkflows/simulate_spike_in'
+include { GENERATE_METADATA             } from '../modules/metadata/generate'
+include { UPLOAD                        } from '../modules/upload/upload'
 
 workflow HYDRASIM {
     take:
-    val_reference_csv
-    val_dataset_csv
-    ch_coverages
+    ch_reference_rows // channel: [ val(meta: [id, accession, taxon_id, study_id]), path(fasta) ]
+    ch_dataset_rows // channel: [ val(meta: [id, accession, source_climb_id]), path(reads) ]
+    ch_coverages // channel: val(coverage: Float)
     val_downsample_background
-    val_dataset_coverage
+    val_downsample_bases
     val_tag_simulated_reads
     val_badread_per_segment
     val_badread_length
     val_badread_low_coverage_cutoff
     val_badread_low_coverage_length
-    val_wgsim_length_read1
-    val_wgsim_length_read2
+    val_generate_metadata
+    val_auto_ingest
 
     main:
 
     // prep refs
-    channel
-        .fromPath(val_reference_csv)
-        .splitCsv(header: true)
-        .map { row ->
-            def id        = "${row.id}".trim()
-            def accession = row.accession ? "${row.accession}".trim() : ''
-            def fasta     = row.path ? file("${row.path}".trim(), checkIfExists: true) : []
-            def taxon_id  = row.taxon_id ? "${row.taxon_id}".trim() : ''
-            def study_id  = row.study_id ? "${row.study_id}".trim() : null
-            def meta      = [
-                id       : id,
-                taxon_id : taxon_id ? taxon_id as Long : null,
-                study_id : study_id
-            ]
-            tuple(meta, accession, fasta)
-        }
-        .branch { meta, accession, fasta ->
-            local: fasta
-                return tuple(meta, fasta)
-            download: accession
-                return tuple(meta, accession)
-        }
-        .set { reference_rows }
+    ch_reference_downloads = ch_reference_rows
+        .filter { meta, _fasta -> meta.accession }
+        .map { meta, _fasta -> tuple(meta, meta.accession) }
 
-    NCBI_DATASETS_DOWNLOAD_GENOME(reference_rows.download)
+    NCBI_DATASETS_DOWNLOAD_GENOME(ch_reference_downloads)
 
-    reference_rows.local
+    ch_references = ch_reference_rows
+        .filter { _meta, fasta -> fasta }
         .mix(NCBI_DATASETS_DOWNLOAD_GENOME.out.fasta)
-        .set { ch_references }
 
     // prep fastqs
-    channel
-        .fromPath(val_dataset_csv)
-        .splitCsv(header: true)
-        .map { row ->
-            def id              = "${row.id}".trim()
-            def layout          = "${row.layout}".trim()
-            def accession       = row.accession ? "${row.accession}".trim() : ''
-            def reads1          = row.reads_1 ? file("${row.reads_1}".trim(), checkIfExists: true) : []
-            def reads2          = row.reads_2 ? file("${row.reads_2}".trim(), checkIfExists: true) : []
-            def source_climb_id = row.source_climb_id ? "${row.source_climb_id}".trim() : ''
-            def meta            = [
-                id             : id,
-                single_end     : layout == 'single',
-                accession      : accession,
-                source_climb_id: source_climb_id
-            ]
+    ch_dataset_downloads = ch_dataset_rows
+        .filter { meta, _reads -> meta.accession }
+        .map { meta, _reads -> tuple(meta, meta.accession) }
 
-            tuple(meta, accession, reads1, reads2)
-        }
-        .branch { meta, accession, reads1, reads2 ->
-            local: reads1
-                return tuple(meta, meta.single_end ? reads1 : [reads1, reads2])
-            download: accession
-                return tuple(meta, accession)
-        }
-        .set { dataset_rows }
+    SRACHA_GET(ch_dataset_downloads)
 
-    SRACHA_GET(dataset_rows.download)
-
-    dataset_rows.local
+    ch_datasets = ch_dataset_rows
+        .filter { _meta, reads -> reads }
         .mix(SRACHA_GET.out.reads)
-        .set { ch_datasets }
 
-    // prep recipies
-    ch_references
+    if (val_downsample_background) {
+        RASUSA_READS(ch_datasets, val_downsample_bases)
+        ch_backgrounds = RASUSA_READS.out.reads
+    }
+    else {
+        ch_backgrounds = ch_datasets
+    }
+
+    // prep recipes
+    ch_recipes = ch_references
         .combine(ch_coverages)
-        .combine(ch_datasets)
+        .combine(ch_backgrounds)
         .map { ref_meta, ref_fasta, coverage, dataset_meta, reads ->
-            def meta      = [
-                id             : dataset_meta.id,
-                ref_id         : ref_meta.id,
-                single_end     : dataset_meta.single_end,
-                coverage       : coverage,
-                badread_length : null,
-                ref_taxon_id   : ref_meta.taxon_id,
-                ref_study_id   : ref_meta.study_id,
-                accession      : dataset_meta.accession,
-                source_climb_id: dataset_meta.source_climb_id
+            def badread_length = coverage <= val_badread_low_coverage_cutoff
+                ? val_badread_low_coverage_length
+                : val_badread_length
+
+            def meta = [
+                id: "${ref_meta.id}_${dataset_meta.id}_${coverage}x",
+                dataset_id: dataset_meta.id,
+                ref_id: ref_meta.id,
+                coverage: coverage,
+                badread_length: badread_length,
+                ref_taxon_id: ref_meta.taxon_id,
+                ref_study_id: ref_meta.study_id,
+                accession: dataset_meta.accession,
+                source_climb_id: dataset_meta.source_climb_id,
             ]
 
             tuple(meta, ref_fasta, coverage, reads)
         }
-        .branch { meta, ref_fasta, coverage, reads ->
-            paired: !meta.single_end
-                return tuple(meta, ref_fasta, coverage, reads)
-            unpaired: meta.single_end
-                return tuple(meta, ref_fasta, coverage, reads)
-        }
-        .set { recipes }
-
-    recipes.unpaired
-        .map { meta, ref_fasta, coverage, reads ->
-            def selected_badread_length = val_badread_length
-
-            if (
-                val_badread_low_coverage_length &&
-                val_badread_low_coverage_cutoff != null &&
-                (coverage as BigDecimal) <= (val_badread_low_coverage_cutoff as BigDecimal)
-            ) {
-                selected_badread_length = val_badread_low_coverage_length
-            }
-
-            tuple(meta + [badread_length: selected_badread_length], ref_fasta, coverage, reads)
-        }
-        .set { ch_unpaired_recipes }
 
     // simulate
-    SIMULATE_UNPAIRED(
-        ch_unpaired_recipes,
-        val_downsample_background,
-        val_dataset_coverage,
+    SIMULATE_SPIKE_IN(
+        ch_recipes,
         val_tag_simulated_reads,
-        val_badread_per_segment
+        val_badread_per_segment,
     )
 
-    SIMULATE_PAIRED(
-        recipes.paired,
-        val_downsample_background,
-        val_dataset_coverage,
-        val_tag_simulated_reads,
-        val_wgsim_length_read1,
-        val_wgsim_length_read2
-    )
-
-    SIMULATE_PAIRED.out.simulated_stats
-        .mix(SIMULATE_UNPAIRED.out.simulated_stats)
-        .set { ch_simulated_stats }
-
-
-    ch_simulated_stats
+    ch_summary = SIMULATE_SPIKE_IN.out.simulated_stats
         .map { _meta, stats -> stats }
-        .collect()
-        .set { ch_simulated_stats_files }
+        .collectFile(
+            name: 'simulated_summary.tsv',
+            keepHeader: true,
+            sort: { stats -> stats.name },
+        )
 
-    SUMMARISE_SEQKIT(ch_simulated_stats_files)
+    ch_metadata = channel.empty()
 
-    if (params.generate_metadata) {
-        SIMULATE_UNPAIRED.out.metadata
-            .mix(SIMULATE_PAIRED.out.metadata)
-            .map { _meta, metadata -> metadata }
+    if (val_generate_metadata) {
+        ch_metadata_records = SIMULATE_SPIKE_IN.out.reads
+            .join(SIMULATE_SPIKE_IN.out.simulated_stats)
+            .map { meta, reads, stats ->
+                // the metadata script needs a million inputs so they are jsonified (into jsonl) first
+                groovy.json.JsonOutput.toJson(
+                    [dataset_id: meta.dataset_id, source_climb_id: meta.source_climb_id, accession: meta.accession, ref_id: meta.ref_id, coverage: meta.coverage, badread_length: meta.badread_length, ref_taxon_id: meta.ref_taxon_id, study_id: meta.ref_study_id, reads: "${workflow.outputDir}/${meta.ref_id}/${meta.dataset_id}/full/${reads.name}", stats: stats.name]
+                )
+            }
+            .collectFile(name: 'metadata_records.jsonl', newLine: true, sort: true)
+
+        ch_metadata_stats = SIMULATE_SPIKE_IN.out.simulated_stats
+            .map { _meta, stats -> stats }
             .collect()
-            .set { ch_metadata_records }
 
         GENERATE_METADATA(
             ch_metadata_records,
-            workflow.manifest.version
+            ch_metadata_stats,
+            workflow.manifest.version,
         )
+        ch_metadata = GENERATE_METADATA.out.csv
 
-        if (params.auto_ingest) {
-            SIMULATE_UNPAIRED.out.reads
+        if (val_auto_ingest) {
+            ch_upload_reads = SIMULATE_SPIKE_IN.out.reads
                 .map { _meta, reads -> reads }
                 .collect()
-                .set { ch_upload_reads }
 
             UPLOAD(
                 GENERATE_METADATA.out.csv,
-                ch_upload_reads
+                ch_upload_reads,
             )
         }
     }
 
     emit:
-    paired          = SIMULATE_PAIRED.out.reads
-    unpaired        = SIMULATE_UNPAIRED.out.reads
-    simulated_stats = ch_simulated_stats
-    summary         = SUMMARISE_SEQKIT.out.tsv
+    reads           = SIMULATE_SPIKE_IN.out.reads // channel: [ val(meta), path(fastq.gz) ]
+    simulated_reads = SIMULATE_SPIKE_IN.out.simulated_reads // channel: [ val(meta), path(fastq.gz) ]
+    simulated_stats = SIMULATE_SPIKE_IN.out.simulated_stats // channel: [ val(meta), path(seqkit_stats.tsv) ]
+    summary         = ch_summary // channel: path(simulated_summary.tsv)
+    metadata        = ch_metadata // channel: path(metadata.csv)
 }
